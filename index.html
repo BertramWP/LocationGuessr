@@ -52,6 +52,7 @@ label{display:block;font-size:.85rem;color:var(--mist);margin-top:1rem}
   <label for="code">Or join with a room code</label>
   <div class="row"><input id="code" maxlength="5" style="text-transform:uppercase"><button id="join" class="alt">Join room</button></div>
   <div id="err" role="alert"></div>
+  <p style="font-size:.8rem;color:var(--mist)">Build v3</p>
 </section>
 
 <section id="lobby" class="screen">
@@ -137,7 +138,7 @@ async function findSpot(token){
     const y=la+(Math.random()*2-1)*r,x=ln+(Math.random()*2-1)*r,s=.0015;
     const u=`https://graph.mapillary.com/images?access_token=${encodeURIComponent(token)}&fields=id,computed_geometry,is_pano&limit=60&bbox=${x-s},${y-s},${x+s},${y+s}`;
     try{
-      const res=await fetch(u),j=await res.json();
+      const res=await fetch(u);if(!res.ok)console.warn('v3 Mapillary',res.status,u.replace(/access_token=[^&]+/,'access_token=…'));const j=await res.json();
       if(j.error){if(/token|OAuth|access/i.test(j.error.message||''))throw new Error('Mapillary rejected the token.');continue}
       const d=(j.data||[]).filter(p=>p.computed_geometry);
       if(d.length){const pn=d.filter(p=>p.is_pano),pool=pn.length?pn:d,p=pool[Math.random()*pool.length|0];
