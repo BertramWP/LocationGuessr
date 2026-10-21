@@ -132,15 +132,17 @@ function pushLobby(){bc({t:'lobby',list:Object.values(players).map(p=>p.name)})}
 
 /* ---------- host: game flow ---------- */
 async function findSpot(token){
-  for(let i=0;i<12;i++){
-    const [la,ln]=CITIES[Math.random()*CITIES.length|0],r=.06;
-    const y=la+(Math.random()*2-1)*r,x=ln+(Math.random()*2-1)*r,s=.012;
-    const u=`https://graph.mapillary.com/images?access_token=${encodeURIComponent(token)}&fields=id,computed_geometry&is_pano=true&limit=30&bbox=${x-s},${y-s},${x+s},${y+s}`;
+  for(let i=0;i<30;i++){
+    const [la,ln]=CITIES[Math.random()*CITIES.length|0],r=.05;
+    const y=la+(Math.random()*2-1)*r,x=ln+(Math.random()*2-1)*r,s=.0015;
+    const u=`https://graph.mapillary.com/images?access_token=${encodeURIComponent(token)}&fields=id,computed_geometry,is_pano&limit=60&bbox=${x-s},${y-s},${x+s},${y+s}`;
     try{
-      const j=await (await fetch(u)).json();
-      if(j.error)throw new Error(j.error.message);
-      if(j.data&&j.data.length){const p=j.data[Math.random()*j.data.length|0];return{img:p.id,lat:p.computed_geometry.coordinates[1],lng:p.computed_geometry.coordinates[0]}}
-    }catch(e){if(/token|OAuth|access/i.test(e.message))throw e}
+      const res=await fetch(u),j=await res.json();
+      if(j.error){if(/token|OAuth|access/i.test(j.error.message||''))throw new Error('Mapillary rejected the token.');continue}
+      const d=(j.data||[]).filter(p=>p.computed_geometry);
+      if(d.length){const pn=d.filter(p=>p.is_pano),pool=pn.length?pn:d,p=pool[Math.random()*pool.length|0];
+        return{img:p.id,lat:p.computed_geometry.coordinates[1],lng:p.computed_geometry.coordinates[0]}}
+    }catch(e){if(/rejected/.test(e.message))throw e}
   }
   throw new Error('Could not find street imagery. Try again.');
 }
